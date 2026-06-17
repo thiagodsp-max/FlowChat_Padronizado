@@ -1,6 +1,6 @@
 from FlowChat import FlowChat
 from ChatIndividual import ChatIndividual
-from Grupo import Grupo
+from ChatGrupo import Grupo
 
 import os
 
@@ -393,12 +393,10 @@ def menu_eventos(chat, usuario):
                     novo_status = input("Novo status do evento (Enter para manter): ").strip()
 
                     evento.editar(
-                        usuario,
-                        nome=novo_nome if novo_nome != "" else None,
+                        usuario,nome=novo_nome if novo_nome != "" else None,
                         data=nova_data if nova_data != "" else None,
                         descricao=nova_descricao if nova_descricao != "" else None,
-                        status=novo_status if novo_status != "" else None,
-                    )
+                        status=novo_status if novo_status != "" else None,)
 
                     print("\nEvento editado com sucesso.")
                     input("\nPressione Enter para continuar...")
@@ -460,29 +458,25 @@ def menu_chat(sistema):
                 print("Mensagem vazia.")
                 return
 
-            if isinstance(chat, Grupo):
-                chat.registrar_mensagem(usuario, conteudo)
-            else:
-                mensagem = chat.criar_mensagem(usuario, conteudo)
-                chat.enviar_mensagem(mensagem)
+            chat.criar_mensagem(usuario, conteudo)
 
             input("\nPressione Enter para continuar...")
             limpar_terminal()
 
         elif opcao == 2:
-            termo = input("\nDigite o termo de pesquisa: ").strip()
+            if isinstance(chat, Grupo):
+                termo = input("\nDigite o nome do usuário remetente para pesquisar: ").strip()
+            else:
+                termo = input("\nDigite o termo de pesquisa: ").strip()
 
             limpar_terminal()
             print(f"Resultados da pesquisa por: {termo}\n")
-
             resultados = chat.pesquisar_mensagens(termo)
-
             if len(resultados) == 0:
                 print("Nenhuma mensagem encontrada.")
             else:
                 for i, mensagem in enumerate(resultados, start=1):
                     mensagem.exibir(i)
-
             input("\nPressione Enter para continuar...")
             limpar_terminal()
 

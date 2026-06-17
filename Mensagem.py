@@ -1,81 +1,70 @@
-#Classe com o Padrão Criacional Abstract Factory
+#
 from abc import ABC, abstractmethod
+from datetime import datetime, timedelta
 
-#Abstract Product
-class Mensagem(ABC):
-    def __init__(self, remetente, conteudo):
+#Abstração da mensagem
+class Mensagem:
+    def __init__(self, remetente, conteudo, leitura):
         self.remetente = remetente
         self.conteudo = conteudo
+
         self.reacoes = []
         self.fixada = False
         self.expira_em = None
 
+        self.leitura = leitura
+    def marcar_como_lida(self, usuario=None):
+        self.leitura.marcar_como_lida(usuario)
     def add_reacao(self, reacao):
         self.reacoes.append(reacao)
-
-    def fixar(self):
+    def fixar_mensagem(self):
         self.fixada = True
+    
+    def obter_status_leitura(self):
+        return self.leitura.obter_status()
+    #Método importante
+    def exibir(self, indice=None):
+        prefixo = (f"{indice} - " if indice is not None else "")
+        print(
+            f"{prefixo}"
+            f"{self.remetente.email}: "
+            f"{self.conteudo}"
+        )
+    def expirou(self):
+        return (self.expira_em is not None
+        and datetime.now() >= self.expira_em)
 
     def definir_tempo_expiracao(self, segundos):
-        import time
-        self.expira_em = time.time() + segundos
+        self.expira_em = datetime.now() + timedelta(seconds=segundos)
 
-    def expirou(self):
-        import time
-        return self.expira_em is not None and time.time() >= self.expira_em
 
-    def formatar_reacoes(self):
-        if not self.reacoes:
-            return ""
-        return " (" + " ".join(self.reacoes) + " )"
-
-    def exibir(self, indice=None):
-        prefixo = f"{indice} - " if indice is not None else ""
-        fixada = "[FIXADA] " if self.fixada else ""
-        print(f"{fixada}{prefixo}{self.remetente.email}: {self.conteudo}{self.formatar_reacoes()}")
-
+#Implementação Abstrata
+class LeituraMensagem(ABC):
     @abstractmethod
-    def marcar_como_lida():
+    def marcar_como_lida(self, usuario=None):
+        pass
+    @abstractmethod
+    def obter_status(self):
         pass
 
-#Concrete Product A
-class MensagemGrupo(Mensagem):
-    def __init__(self, remetente, conteudo):
-        super().__init__(remetente, conteudo)
-        self.lida_por = []
-
-    def marcar_como_lida(self, usuario):
-        if usuario.email not in self.lida_por:
-            self.lida_por.append(usuario.email)
-
-#Concrete Product B
-class MensagemPrivada(Mensagem):
-    def __init__(self, remetente, conteudo):
-        super().__init__(remetente, conteudo)
+#Implementações concretas
+class LeituraMensagemPrivada(LeituraMensagem):
+    def __init__(self):
         self.visualizada = False
 
-    def marcar_como_lida(self):
+    def marcar_como_lida(self, usuario=None):
         self.visualizada = True
+    
+    def obter_status(self):
+        return self.visualizada
 
-#Concrete Factory A
-class FactoryGrupo:
-    @staticmethod
-    def criar_mensagem(remetente, conteudo):
-        return MensagemGrupo(remetente, conteudo)
+class LeituraMensagemGrupo(LeituraMensagem):
+    def __init__(self):
+        self.lida_por=[]
 
-#Concrete Factory B
-class FactoryPrivada:
-    @staticmethod
-    def criar_mensagem(remetente, conteudo):
-        return MensagemPrivada(remetente, conteudo)
-
-#Abstract Factory
-class FactoryMensagem(ABC):
-    @staticmethod
-    def criar_mensagem(tipo, remetente, conteudo):
-        if tipo == "grupo":
-            return FactoryGrupo.criar_mensagem(remetente, conteudo)
-        elif tipo == "privada":
-            return FactoryPrivada.criar_mensagem(remetente, conteudo)
-        else:
-            raise ValueError("Tipo de mensagem desconhecido")
+    def marcar_como_lida(self, usuario=None):
+        # Lógica para marcar como lida em um chat de grupo, considerando o usuário
+        if usuario.email not in self.lida_por:
+            self.lida_por.append(usuario.email)
+    def obter_status(self):
+        return self.lida_por
